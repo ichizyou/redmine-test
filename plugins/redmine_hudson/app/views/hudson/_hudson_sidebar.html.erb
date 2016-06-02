@@ -1,0 +1,6 @@
+<h3><%=l(:label_hudson)%></h3>
+
+<p>
+<%=link_to_if_authorized l(:label_settings), {:controller => 'hudson_settings', :action => 'edit', :id => @project}%><br/>
+<%=link_to l(:label_hudson_server), @hudson.settings.url%>
+</p>

@@ -1,0 +1,11 @@
+#production-sqlite:
+#  adapter: sqlite3
+#  database: db/alminium.sqlite3
+
+production:
+  adapter: mysql
+  database: alminium
+  host: localhost
+  username: alminium
+  password: alminium
+  encoding: utf8

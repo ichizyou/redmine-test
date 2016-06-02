@@ -1,0 +1,18 @@
+source 'https://rubygems.org'
+
+group :test do
+  gem 'rspec', "~> 2.11.0"
+  gem "rspec-rails", "~> 2.11.0"
+  gem 'cucumber'
+  gem 'cucumber-rails'
+  gem 'capybara', '~> 2.0.0'
+  gem 'selenium-webdriver'
+  gem 'database_cleaner'
+
+  platforms :mri_19, :mingw_19 do
+    gem 'simplecov','~> 0.6'
+    gem 'simplecov-rcov'
+    gem 'simplecov-rcov-text','>= 0'
+  end
+end
+

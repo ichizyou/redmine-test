@@ -1,0 +1,22 @@
+/usr/bin/ruby extconf.rb
+creating Makefile
+
+make "DESTDIR=" clean
+
+make "DESTDIR="
+compiling rc_markdown.c
+compiling buffer.c
+compiling houdini_html_e.c
+compiling html.c
+compiling markdown.c
+markdown.c:67: 警告: ‘char_underline’ declared ‘static’ but never defined
+compiling autolink.c
+compiling houdini_href_e.c
+compiling rc_render.c
+compiling html_smartypants.c
+compiling stack.c
+linking shared-object redcarpet.so
+
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 redcarpet.so ./.gem.20160602-2719-whrmsu
+installing default redcarpet libraries

@@ -1,0 +1,50 @@
+<div class="floating" id="joblist">
+  <%=link_to "[#{l(:label_update_jobs)}]", 
+    :url => { :action => 'joblist', :id=>@project },
+    :with => "'url=' + $('settings_url').value + '&url_for_plugin=' + $('settings_url_for_plugin').value + '&enable_url_for_plugin=' + $('enable_url_for_plugin').checked",
+    :remote => true %><br/>
+<p>
+<% if @jobs.length == 0 %>
+  <%=@error if @error != nil%>
+  <%=l(:notice_err_no_jobs) unless @error != nil%>
+<% else %>
+  <table class="job-list" id="job-list">
+    <thead>
+    <tr><th><%=image_tag('toggle_check.png')%></th>
+    <th><%=l(:field_name)%></th>
+    <th><%=l(:label_num_of_stored_builds)%></th>
+    <th><%=l(:label_delete_old_build)%></th>
+    <th><%=l(:label_log_rotator_days_to_keep)%></th>
+    <th><%=l(:label_log_rotator_num_to_keep)%></th>
+    <th></th>
+    </tr>
+    </thead>
+  <% @jobs.each do |job_name| %>
+    <% job = @hudson.get_job(job_name) -%>
+    <tr class="<%= cycle('odd', 'even')%>">
+    <td class="checkbox"><%= check_box_tag 'settings[jobs][]', job_name, @hudson.settings.job_include?(job_name) %></td>
+    <% linked_job_name = link_to(job_name, job.url_for(:user)) %>
+    <% number_of_build = HudsonBuild.count_of(job) -%>
+    <td class="job-name"><%= linked_job_name %></td>
+    <td class="number"><%= number_with_delimiter number_of_build %></td>
+
+    <%=render :partial => 'job_settings', :locals => {:field_name => "job_settings[]", :job => job} %>
+    <% delete_button = "" 
+       if job && job.job_settings && job.job_settings.do_rotate? 
+         delete_button = 
+           link_to(l(:button_delete), 
+                   :url => { :controller => 'hudson_settings', :action => 'delete_builds', :id => @project, :job_id => job.id },
+                   :method => :post,
+                   :success => "on_job_settings_reloaded",
+                   :title => l(:button_delete),
+                   :class => 'icon icon-del')
+       end -%>
+    <td><%=delete_button%></td>
+    </tr>
+  <% end %>
+  </table>
+<% end %>
+ <%= hidden_field_tag 'settings[jobs][]', '' %>
+ <%= hidden_field_tag 'job_settings[-1]', '' %>
+</p>
+</div>

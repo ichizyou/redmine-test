@@ -1,0 +1,130 @@
+<style type="text/css">
+<!-- div#content {
+  background-image: url("<%=url_for_ci_server_persona(@hudson)%>");
+  background-position: left bottom;
+  background-repeat: no-repeat;
+}
+div.contextual a {
+  text-decoration: none;
+}
+
+<%= render :partial => 'icon_style_hudson' if @hudson.settings.look_and_feel == 'Hudson' %>
+<%= render :partial => 'icon_style_plugin' if @hudson.settings.look_and_feel == 'Plugin' %>
+-->
+</style>
+<div class="contextual">
+  <a class="icon icon-switch-description-visibility" id="switch-description-visibility"></span>
+</div>
+<h2><%=l(:label_job_list)%></h2>
+
+<% if @hudson.jobs.length == 0 %>
+  <div class="nodata"><%=l(:notice_no_jobs)%></div>
+<% else %>
+  <div class="flash notice" id="info" style="display:none;"></div>
+  <div class="flash error" id="error" style="display:none;"></div>
+  <div id="remote-debug" style="display:none;"></div>
+
+  <% @hudson.jobs.each do |job|%>
+    <% next unless @hudson.settings.job_include?(job.name) %>
+    <div class="contextual<%='-icon24' if @hudson.settings.look_and_feel == 'Hudson'%>">
+    <% build_icon = image_tag("#{@hudson.settings.url}images/24x24/clock.gif", :alt => 'build', :class=>'icon-build-request', :id=>"build-request-#{job.id}", :title => l(:label_build_now)) if @hudson.settings.look_and_feel == 'Hudson' %>
+    <% build_icon = "[#{l(:label_build_now)}]" if @hudson.settings.look_and_feel == 'Plugin' %>
+    <%= build_icon if authorize_for( "hudson", "build" ) %>
+    </div>
+
+    <div class="contextual latest-build" id='latest-build-<%=job.id%>'>
+      <%=job.latest_build.error if job.latest_build.error.present? %>
+      <% if job.latest_build.error.blank? %>
+        <% if job.latest_build.number.present? %>
+          <%=image_tag 'document.png', :class=>'icon-build-history', :id=>"build-history-#{job.id}", :title=>l(:label_show_build_history)%>
+          <%=image_tag("#{@hudson.settings.url}images/16x16/package.gif", :class=>"icon-build-artifacts", :id=>"build-artifacts-#{job.id}", :title=>l(:label_show_build_artifacts)) unless job.latest_build.artifacts.empty? %>
+          <%=link_to "##{job.latest_build.number}", job.latest_build.url_for(:user), :class => 'number' %>
+          <%=content_tag("span", job.latest_build.result, :class => "result #{job.latest_build.result.downcase}") if true != job.latest_build.building? && job.latest_build.result.present? %>
+          <%=content_tag("span", l(:notice_building), :class => "result") if job.latest_build.building? %>
+          <% today_tag = "" %>
+          <% today_tag = " " + image_tag("today.png", :plugin => "redmine_hudson", :title => l(:label_todays_build)) if is_today?(job.latest_build.finished_at) %>
+          <%=content_tag("span", job.latest_build.finished_at.localtime.strftime("%Y/%m/%d %H:%M:%S"), :class => 'finished-at') + today_tag.html_safe if job.latest_build.finished_at %>
+        <% end %>
+        <%=l(:notice_no_builds) if "" == job.latest_build.number%>
+      <% end %>
+    </div>
+
+    <div class="job-state" id="job-state-<%="#{job.id}"%>">
+    <% icon_base_class = "icon24" if @hudson.settings.look_and_feel == 'Hudson' %>
+    <% icon_base_class = "icon" if @hudson.settings.look_and_feel == 'Plugin' %>
+    <h3 class="<%=icon_base_class%> icon-<%=job.state%>" id="job-name-<%="#{job.id}"%>"><%=link_to job.name, job.url_for(:user)%></h3>
+      <div class="wiki job-description">
+        <% if Hudson.job_description_format == "textile" %>
+          <%= textilizable job.description %>
+        <% else %>
+          <%= raw job.description %>
+        <% end %>
+      </div>
+
+      <ul class="job-health-reports">
+        <% job.health_reports.each do |report| %>
+          <% if report.url.present? %>
+            <%= content_tag :li, "#{link_to(report.description, report.url)} #{report.score}%".html_safe %>
+          <% else %>
+            <%= content_tag :li, "#{report.description} #{report.score}%" %>
+          <% end %>
+        <% end %>
+      </ul>
+    </div>
+
+    <ul class="build-artifacts-list" id="build-artifacts-list-<%="#{job.id}"%>" style="display:none;">
+    <% job.latest_build.artifacts.each do |artifact| %>
+      <%= content_tag :li, link_to(artifact.display_path, "#{job.url_for(:user)}/#{job.latest_build.number}/artifact/#{artifact.relative_path}")%>
+    <% end %>
+    </ul>
+
+  <% end %>
+
+  <div id="build-history" style="display:none;"></div>
+  <div id="build-artifacts" style="display:none;">
+    <%="#{l(:label_build_artifacts)}" %><hr style="width:18em;"/><div id="build-artifacts-list" style="padding-left:20px;"></div>
+  </div>
+<% end %>
+
+<!-- Add Atom Feed -->
+<% other_formats_links do |f| %>
+        <%= f.link_to 'Atom', :url => { :project_id => @project,  :key => User.current.rss_key } %>
+<% end %>
+
+<% content_for :sidebar do %>
+  <%= render :partial => 'hudson_sidebar' %>
+<% end %>
+
+<style type="text/css"></style>
+<script type="text/javascript">
+//<!--
+$(document).ready(function() {
+  $('.icon-build-history').buildHistoryController({
+    url: '<%= url_for(:controller => "hudson", :action => "history", :id => @project)%>'
+  });
+  $('.icon-build-artifacts').buildArtifactsController({
+  });
+  <% if authorize_for( "hudson", "build" ) %>
+  $('.icon-build-request').buildRequestController({
+    url: '<%= url_for(:controller => "hudson", :action => "build", :id => @project)%>',
+    message_success: '<%="#{t :notice_build_accepted} - ${job_name}".html_safe%>',
+    message_failure: '<%="#{t :notice_err_build_failed} - ${job_name}".html_safe%>'
+  });
+  $('#switch-description-visibility').descriptionVisibilityController({
+    initialState: <%=!@hudson.settings[:show_compact]%>,
+    labelShow: '<%=t :label_show_description%>',
+    labelHide: '<%=t :label_hide_description%>'
+  });
+  <% end %>
+});
+//-->
+</script>
+
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag "hudson.css", :plugin => "redmine_hudson", :media => "screen" %>
+  <%= javascript_include_tag 'jquery.outerHtml.js', :plugin => "redmine_hudson" %>
+  <%= javascript_include_tag 'jquery.build_history_controller.js', :plugin => "redmine_hudson" %>
+  <%= javascript_include_tag 'jquery.build_artifacts_controller.js', :plugin => "redmine_hudson" %>
+  <%= javascript_include_tag 'jquery.build_request_controller.js', :plugin => "redmine_hudson" %>
+  <%= javascript_include_tag 'jquery.description_visibility_controller.js', :plugin => "redmine_hudson" %>
+<% end %>

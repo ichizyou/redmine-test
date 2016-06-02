@@ -1,0 +1,29 @@
+<hudson>
+
+<job>
+    <action/>
+    <displayName>have white space</displayName>
+    <description>
+    this job name has white space
+    </description>
+    <name>have white space</name>
+    <url>http://noauth.onejob.nohealthreport.local:9090/job/have%20white%20space/</url>
+    <buildable>true</buildable>
+    <color>red</color>
+    <lastBuild>
+        <number>1</number>
+        <url>http://noauth.onejob.nohealthreport.local:9090/job/have%20white%20space/1/</url>
+    </lastBuild>
+</job>
+
+<primaryView>
+<name>すべて</name>
+<url>http://noauth.onejob.nohealthreport.local:9090/</url>
+</primaryView>
+<slaveAgentPort>0</slaveAgentPort>
+
+<view>
+<name>すべて</name>
+<url>http://noauth.onejob.nohealthreport.local:9090/</url>
+</view>
+</hudson>
